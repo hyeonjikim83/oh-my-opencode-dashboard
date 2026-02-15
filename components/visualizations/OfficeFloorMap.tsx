@@ -190,17 +190,19 @@ function agentActivity(
   agentName: string,
   lastActiveAt: number,
   now: number,
+  theme: "light" | "dark",
 ): { text: string; color: string } {
+  const light = theme === "light";
   if (agentName === "sisyphus") {
     const ago = now - lastActiveAt;
-    if (ago < AGENT_WORKING_MS) return { text: "delegating", color: "#F59E0B" };
-    if (ago < AGENT_RECENT_MS) return { text: "thinking", color: "#D97706" };
-    return { text: "idle", color: "#64748B" };
+    if (ago < AGENT_WORKING_MS) return { text: "delegating", color: light ? "#B45309" : "#F59E0B" };
+    if (ago < AGENT_RECENT_MS) return { text: "thinking", color: light ? "#92400E" : "#D97706" };
+    return { text: "idle", color: light ? "#78716C" : "#64748B" };
   }
   const ago = now - lastActiveAt;
-  if (ago < AGENT_WORKING_MS) return { text: "working", color: "#22C55E" };
-  if (ago < AGENT_RECENT_MS) return { text: "paused", color: "#FBBF24" };
-  return { text: "idle", color: "#64748B" };
+  if (ago < AGENT_WORKING_MS) return { text: "working", color: light ? "#15803D" : "#22C55E" };
+  if (ago < AGENT_RECENT_MS) return { text: "paused", color: light ? "#A16207" : "#FBBF24" };
+  return { text: "idle", color: light ? "#78716C" : "#64748B" };
 }
 
 function resolveModelLabel(provider: string, model: string): string {
@@ -221,6 +223,7 @@ function AgentChar({
   model,
   now,
   delay,
+  theme,
 }: {
   name: string;
   lastActiveAt: number;
@@ -228,13 +231,16 @@ function AgentChar({
   model: string;
   now: number;
   delay: number;
+  theme: "light" | "dark";
 }) {
   const meta = AGENT_META[name] ?? { label: name, emoji: "?", role: "" };
-  const st = agentActivity(name, lastActiveAt, now);
+  const st = agentActivity(name, lastActiveAt, now, theme);
   const idle = st.text === "idle";
   const provIcon = resolveProviderIcon(provider);
   const modelLabel = resolveModelLabel(provider, model);
   const shortModel = modelLabel.length > 14 ? modelLabel.slice(0, 12) + ".." : modelLabel;
+  const subtextColor = theme === "light" ? "#78716C" : "#64748B";
+  const labelColor = theme === "light" ? "#44403C" : "#CBD5E1";
 
   return (
     <motion.div
@@ -244,14 +250,14 @@ function AgentChar({
       transition={{ delay, duration: 0.3, ease: "easeOut" }}
       style={{ opacity: idle ? 0.5 : 1 }}
     >
-      <span className="text-[9px] text-slate-500">
+      <span className="text-[9px]" style={{ color: subtextColor }}>
         {provIcon} {shortModel}
       </span>
-      <span className="text-[10px] text-slate-500">
+      <span className="text-[10px]" style={{ color: subtextColor }}>
         {idle ? "zzZ" : "\u00B7\u00B7\u00B7"}
       </span>
       <Px g={charGrid(name)} c={5} />
-      <span className="mt-0.5 text-[10px] font-bold text-slate-300">
+      <span className="mt-0.5 text-[10px] font-bold" style={{ color: labelColor }}>
         {meta.label}
       </span>
       <span className="flex items-center gap-0.5 text-[9px]">
@@ -314,6 +320,7 @@ function SessionRoom({
                 model={data.model}
                 now={now}
                 delay={i * 0.08}
+                theme={theme}
               />
             ))
           ) : (
