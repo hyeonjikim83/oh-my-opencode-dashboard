@@ -18,7 +18,7 @@ Oh-My-OpenCode에서 사용하는 AI 에이전트들의 사용량을 시각적�
 |---|---|---|
 | **Claude Code (Sisyphus)** | AWS Bedrock — `anthropic.claude-opus-4-6-v1` | 메인 오케스트레이터, 코드 작성/수정 |
 | **Codex** | OpenAI — `gpt-5.3-codex` | 서브에이전트 (hephaestus, ultrabrain, deep 등) |
-| **Antigravity** | Google — `gemini-3-pro/flash`, Anthropic via AG | 서브에이전트 (visual-engineering, quick, writing 등) |
+| **Antigravity** | Google — `gemini-3-pro/flash(Antigravity)`, Anthropic via AG | 서브에이전트 (visual-engineering, quick, writing 등) |
 
 ### Oh-My-OpenCode 에이전트 구성 (oh-my-opencode.json 기반)
 
