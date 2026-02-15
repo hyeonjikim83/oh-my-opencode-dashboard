@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { AGENT_META } from "@/lib/constants";
 import type { AgentSummary } from "@/lib/types";
@@ -75,44 +74,26 @@ export function AgentTable({ agents }: AgentTableProps) {
   };
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className="panel-frame panel-frame-hover relative overflow-hidden rounded-2xl p-6"
-    >
-      <div className="pointer-events-none absolute inset-0 rounded-2xl p-px [background:linear-gradient(140deg,rgba(34,211,238,0.52),transparent_40%,rgba(251,191,36,0.48))] [mask:linear-gradient(#fff_0_0)_content-box,linear-gradient(#fff_0_0)] [mask-composite:xor]" />
-      <h2 className="text-lg font-semibold tracking-tight text-slate-50">Agent Usage</h2>
-      <div className="mt-4 overflow-x-auto rounded-xl border border-slate-700/50 bg-slate-950/30">
-        <table className="min-w-full divide-y divide-slate-700/60 text-sm">
+    <section className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+      <h2 className="text-lg font-semibold text-slate-100">Agent Usage</h2>
+      <div className="mt-4 overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-800 text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-[0.14em] text-slate-400">
+            <tr className="text-left text-slate-400">
               <th className="px-3 py-3">
-                <button
-                  type="button"
-                  onClick={() => onSort("agent")}
-                  className="cursor-pointer transition-colors hover:text-cyan-200"
-                >
+                <button type="button" onClick={() => onSort("agent")} className="cursor-pointer">
                   Agent{sortIndicator("agent")}
                 </button>
               </th>
               <th className="px-3 py-3">
-                <button
-                  type="button"
-                  onClick={() => onSort("messageCount")}
-                  className="cursor-pointer transition-colors hover:text-cyan-200"
-                >
+                <button type="button" onClick={() => onSort("messageCount")} className="cursor-pointer">
                   Messages{sortIndicator("messageCount")}
                 </button>
               </th>
               {anyHasBilling && (
                 <>
                   <th className="px-3 py-3">
-                    <button
-                      type="button"
-                      onClick={() => onSort("totalCost")}
-                      className="cursor-pointer transition-colors hover:text-cyan-200"
-                    >
+                    <button type="button" onClick={() => onSort("totalCost")} className="cursor-pointer">
                       Cost{sortIndicator("totalCost")}
                     </button>
                   </th>
@@ -120,7 +101,7 @@ export function AgentTable({ agents }: AgentTableProps) {
                     <button
                       type="button"
                       onClick={() => onSort("avgCostPerMessage")}
-                      className="cursor-pointer transition-colors hover:text-cyan-200"
+                      className="cursor-pointer"
                     >
                       Avg Cost{sortIndicator("avgCostPerMessage")}
                     </button>
@@ -128,11 +109,7 @@ export function AgentTable({ agents }: AgentTableProps) {
                 </>
               )}
               <th className="px-3 py-3">
-                <button
-                  type="button"
-                  onClick={() => onSort("tokens")}
-                  className="cursor-pointer transition-colors hover:text-cyan-200"
-                >
+                <button type="button" onClick={() => onSort("tokens")} className="cursor-pointer">
                   Tokens In/Out{sortIndicator("tokens")}
                 </button>
               </th>
@@ -140,7 +117,7 @@ export function AgentTable({ agents }: AgentTableProps) {
                 <button
                   type="button"
                   onClick={() => onSort("cacheHitRate")}
-                  className="cursor-pointer transition-colors hover:text-cyan-200"
+                  className="cursor-pointer"
                 >
                   Cache Hit Rate{sortIndicator("cacheHitRate")}
                 </button>
@@ -149,14 +126,14 @@ export function AgentTable({ agents }: AgentTableProps) {
                 <button
                   type="button"
                   onClick={() => onSort("avgResponseTime")}
-                  className="cursor-pointer transition-colors hover:text-cyan-200"
+                  className="cursor-pointer"
                 >
                   Avg Response Time{sortIndicator("avgResponseTime")}
                 </button>
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody className="divide-y divide-slate-800">
             {sortedAgents.map((agent) => {
               const meta = AGENT_META[agent.agent] ?? {
                 emoji: "❓",
@@ -167,18 +144,14 @@ export function AgentTable({ agents }: AgentTableProps) {
               return (
                 <tr
                   key={agent.agent}
-                  className={
-                    agent.agent === "unknown"
-                      ? "text-slate-500"
-                      : "text-slate-300 transition-colors hover:bg-cyan-300/[0.07]"
-                  }
+                  className={agent.agent === "unknown" ? "text-slate-500" : "text-slate-300 hover:bg-slate-800/50"}
                 >
                   <td className="px-3 py-3">
                     <div className="flex items-center gap-3">
                       <span>{meta.emoji}</span>
                       <div>
                         <p className="text-slate-100">{meta.label}</p>
-                        <p className="text-xs text-slate-500/90">{meta.role}</p>
+                        <p className="text-xs text-slate-500">{meta.role}</p>
                       </div>
                     </div>
                   </td>
@@ -204,6 +177,6 @@ export function AgentTable({ agents }: AgentTableProps) {
           </tbody>
         </table>
       </div>
-    </motion.section>
+    </section>
   );
 }
