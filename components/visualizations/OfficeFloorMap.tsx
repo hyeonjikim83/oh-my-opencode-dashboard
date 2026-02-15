@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTheme } from "@/components/ThemeProvider";
 import { AGENT_META, PROVIDER_MAP } from "@/lib/constants";
 import type { SessionSummary, DashboardData } from "@/lib/types";
 import { formatTokens, formatNumber, formatRelativeTime } from "@/lib/utils";
@@ -30,6 +31,15 @@ const ROOM_THEMES = [
   { wall: "#22102E", floor: "#2A1538", border: "#3D1B50", dot: "#A855F7" },
   { wall: "#1E1710", floor: "#2A2018", border: "#4A3828", dot: "#F97316" },
   { wall: "#0E1A28", floor: "#132230", border: "#1B3248", dot: "#EC4899" },
+];
+
+const LIGHT_ROOM_THEMES = [
+  { wall: "#F5F0E8", floor: "#E8D5B5", border: "#D4C4A8", dot: "#F59E0B" },
+  { wall: "#FFF8F0", floor: "#DEC9A8", border: "#DCC8AA", dot: "#3B82F6" },
+  { wall: "#F6EFE3", floor: "#F0E0C8", border: "#D7C6AA", dot: "#22C55E" },
+  { wall: "#FBF3E8", floor: "#E5D2B2", border: "#D6C1A2", dot: "#A855F7" },
+  { wall: "#F8EFE2", floor: "#DCC3A0", border: "#CFAF8D", dot: "#F97316" },
+  { wall: "#FFF6EA", floor: "#E7D2B4", border: "#D6C1A5", dot: "#EC4899" },
 ];
 
 type FurnitureSet = { sprites: (() => (string | null)[][])[]; sizes: number[] };
@@ -255,19 +265,27 @@ function AgentChar({
 function SessionRoom({
   session,
   themeIndex,
+  theme,
   now,
 }: {
   session: SessionSummary;
   themeIndex: number;
+  theme: "light" | "dark";
   now: number;
 }) {
-  const t = ROOM_THEMES[themeIndex % ROOM_THEMES.length];
+  const roomThemes = theme === "light" ? LIGHT_ROOM_THEMES : ROOM_THEMES;
+  const t = roomThemes[themeIndex % roomThemes.length];
   const furniture = FURNITURE_SETS[themeIndex % FURNITURE_SETS.length];
   const agentEntries = Object.entries(session.agents)
     .filter(([n]) => n !== "unknown")
     .sort((a, b) => b[1].lastActiveAt - a[1].lastActiveAt);
   const roomLabel = session.title || session.slug;
   const truncated = roomLabel.length > 28 ? roomLabel.slice(0, 26) + ".." : roomLabel;
+  const roomTitleColor = theme === "light" ? "#5A4630" : "#E2E8F0";
+  const metaColor = theme === "light" ? "#7C6650" : "#64748B";
+  const emptyColor = theme === "light" ? "#8B7355" : "#334155";
+  const furnitureBorderColor = theme === "light" ? "rgba(124, 102, 80, 0.25)" : "rgba(255, 255, 255, 0.05)";
+  const footerTextColor = theme === "light" ? "#725B44" : "#475569";
 
   return (
     <div
@@ -277,9 +295,9 @@ function SessionRoom({
       <div className="flex items-baseline justify-between gap-2 px-3 py-1.5" style={{ background: t.wall }}>
         <span className="min-w-0 truncate text-xs font-bold">
           <span style={{ color: t.dot }}>{"\u25A0"} </span>
-          <span className="text-slate-200">{truncated}</span>
+          <span style={{ color: roomTitleColor }}>{truncated}</span>
         </span>
-        <span className="shrink-0 text-[10px] text-slate-500">
+        <span className="shrink-0 text-[10px]" style={{ color: metaColor }}>
           {formatRelativeTime(session.updatedAt)}
         </span>
       </div>
@@ -299,11 +317,13 @@ function SessionRoom({
               />
             ))
           ) : (
-            <span className="text-[10px] italic text-slate-700">empty</span>
+            <span className="text-[10px] italic" style={{ color: emptyColor }}>
+              empty
+            </span>
           )}
         </div>
 
-        <div className="flex items-end justify-around gap-3 border-t border-white/5 pt-2">
+        <div className="flex items-end justify-around gap-3 border-t pt-2" style={{ borderColor: furnitureBorderColor }}>
           {furniture.sprites.map((fn, i) => (
             <Px key={i} g={fn()} c={furniture.sizes[i]} />
           ))}
@@ -311,8 +331,8 @@ function SessionRoom({
       </div>
 
       <div
-        className="flex items-center justify-between px-3 py-1 text-[9px] text-slate-600"
-        style={{ background: t.wall }}
+        className="flex items-center justify-between px-3 py-1 text-[9px]"
+        style={{ background: t.wall, color: footerTextColor }}
       >
         <span>{formatNumber(session.messageCount)} msg</span>
         <span>{formatTokens(session.tokens.total)} tok</span>
@@ -328,6 +348,7 @@ interface OfficeFloorMapProps {
 }
 
 export function OfficeFloorMap({ sessions, totals }: OfficeFloorMapProps) {
+  const { theme } = useTheme();
   const now = Date.now();
   const activeSessions = sessions
     .filter((s) => now - s.updatedAt < SESSION_ACTIVE_MS && s.messageCount > 0)
@@ -352,15 +373,15 @@ export function OfficeFloorMap({ sessions, totals }: OfficeFloorMapProps) {
   }
 
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono">
+    <section className="rounded-xl border border-slate-800/60 bg-slate-950/90 p-4 font-mono backdrop-blur-sm">
       <div className="mb-4 flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <span className="text-slate-500">{"\u2610"}</span>
+          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-slate-800/60 text-xs ring-1 ring-white/5">☰</span>
           <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
             Office Floor Map
           </span>
         </div>
-        <span className="text-[10px] text-slate-600">
+        <span className="rounded-full bg-slate-800/60 px-2.5 py-0.5 text-[10px] font-medium text-slate-500">
           {activeSessions.length} active session{activeSessions.length !== 1 ? "s" : ""}
         </span>
       </div>
@@ -386,6 +407,7 @@ export function OfficeFloorMap({ sessions, totals }: OfficeFloorMapProps) {
                     key={s.id}
                     session={s}
                     themeIndex={ri * 2 + ci}
+                    theme={theme}
                     now={now}
                   />
                 ))}
@@ -395,7 +417,7 @@ export function OfficeFloorMap({ sessions, totals }: OfficeFloorMapProps) {
         </div>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 px-1 pt-3 text-[11px] text-slate-500">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/40 px-1 pt-3 text-[11px] text-slate-500">
         <div>
           <span className="font-bold text-slate-400">TOKEN:</span>{" "}
           <span className="text-slate-300">

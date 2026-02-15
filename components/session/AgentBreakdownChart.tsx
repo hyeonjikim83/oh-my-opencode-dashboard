@@ -24,7 +24,11 @@ export function AgentBreakdownChart({ data }: AgentBreakdownChartProps) {
     }));
 
   if (chartData.length === 0) {
-    return <div className="flex h-72 items-center justify-center text-sm text-slate-500">No cost data</div>;
+    return (
+      <div className="flex h-72 items-center justify-center text-sm text-slate-500">
+        No cost data
+      </div>
+    );
   }
 
   return (
@@ -38,6 +42,7 @@ export function AgentBreakdownChart({ data }: AgentBreakdownChartProps) {
             innerRadius={65}
             outerRadius={104}
             paddingAngle={2}
+            strokeWidth={0}
           >
             {chartData.map((entry) => (
               <Cell key={entry.name} fill={entry.color} />
@@ -47,9 +52,10 @@ export function AgentBreakdownChart({ data }: AgentBreakdownChartProps) {
             formatter={(value: number) => formatCost(value)}
             contentStyle={{
               background: "#0f172a",
-              border: "1px solid #1e293b",
+              border: "1px solid rgba(30, 41, 59, 0.6)",
               borderRadius: "0.75rem",
               color: "#e2e8f0",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
             }}
           />
         </PieChart>

@@ -74,26 +74,31 @@ export function AgentTable({ agents }: AgentTableProps) {
   };
 
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-      <h2 className="text-lg font-semibold text-slate-100">Agent Usage</h2>
+    <section className="rounded-xl border border-slate-800/60 bg-slate-900/80 p-6 backdrop-blur-sm">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-slate-100">Agent Usage</h2>
+        <span className="rounded-full bg-slate-800/60 px-2.5 py-0.5 text-[11px] font-medium text-slate-400">
+          {agents.length} agents
+        </span>
+      </div>
       <div className="mt-4 overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-800 text-sm">
+        <table className="min-w-full text-sm">
           <thead>
-            <tr className="text-left text-slate-400">
+            <tr className="border-b border-slate-800/60 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
               <th className="px-3 py-3">
-                <button type="button" onClick={() => onSort("agent")} className="cursor-pointer">
+                <button type="button" onClick={() => onSort("agent")} className="cursor-pointer transition-colors hover:text-slate-300">
                   Agent{sortIndicator("agent")}
                 </button>
               </th>
               <th className="px-3 py-3">
-                <button type="button" onClick={() => onSort("messageCount")} className="cursor-pointer">
+                <button type="button" onClick={() => onSort("messageCount")} className="cursor-pointer transition-colors hover:text-slate-300">
                   Messages{sortIndicator("messageCount")}
                 </button>
               </th>
               {anyHasBilling && (
                 <>
                   <th className="px-3 py-3">
-                    <button type="button" onClick={() => onSort("totalCost")} className="cursor-pointer">
+                    <button type="button" onClick={() => onSort("totalCost")} className="cursor-pointer transition-colors hover:text-slate-300">
                       Cost{sortIndicator("totalCost")}
                     </button>
                   </th>
@@ -101,7 +106,7 @@ export function AgentTable({ agents }: AgentTableProps) {
                     <button
                       type="button"
                       onClick={() => onSort("avgCostPerMessage")}
-                      className="cursor-pointer"
+                      className="cursor-pointer transition-colors hover:text-slate-300"
                     >
                       Avg Cost{sortIndicator("avgCostPerMessage")}
                     </button>
@@ -109,7 +114,7 @@ export function AgentTable({ agents }: AgentTableProps) {
                 </>
               )}
               <th className="px-3 py-3">
-                <button type="button" onClick={() => onSort("tokens")} className="cursor-pointer">
+                <button type="button" onClick={() => onSort("tokens")} className="cursor-pointer transition-colors hover:text-slate-300">
                   Tokens In/Out{sortIndicator("tokens")}
                 </button>
               </th>
@@ -117,7 +122,7 @@ export function AgentTable({ agents }: AgentTableProps) {
                 <button
                   type="button"
                   onClick={() => onSort("cacheHitRate")}
-                  className="cursor-pointer"
+                  className="cursor-pointer transition-colors hover:text-slate-300"
                 >
                   Cache Hit Rate{sortIndicator("cacheHitRate")}
                 </button>
@@ -126,15 +131,15 @@ export function AgentTable({ agents }: AgentTableProps) {
                 <button
                   type="button"
                   onClick={() => onSort("avgResponseTime")}
-                  className="cursor-pointer"
+                  className="cursor-pointer transition-colors hover:text-slate-300"
                 >
                   Avg Response Time{sortIndicator("avgResponseTime")}
                 </button>
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800">
-            {sortedAgents.map((agent) => {
+          <tbody>
+            {sortedAgents.map((agent, index) => {
               const meta = AGENT_META[agent.agent] ?? {
                 emoji: "❓",
                 label: agent.agent,
@@ -144,33 +149,57 @@ export function AgentTable({ agents }: AgentTableProps) {
               return (
                 <tr
                   key={agent.agent}
-                  className={agent.agent === "unknown" ? "text-slate-500" : "text-slate-300 hover:bg-slate-800/50"}
+                  className={`border-b border-slate-800/30 transition-colors ${
+                    agent.agent === "unknown"
+                      ? "text-slate-500"
+                      : "text-slate-300 hover:bg-slate-800/30"
+                  } ${index % 2 === 1 ? "bg-slate-900/40" : ""}`}
                 >
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-3.5">
                     <div className="flex items-center gap-3">
-                      <span>{meta.emoji}</span>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800/60 text-sm ring-1 ring-white/5">
+                        {meta.emoji}
+                      </span>
                       <div>
-                        <p className="text-slate-100">{meta.label}</p>
-                        <p className="text-xs text-slate-500">{meta.role}</p>
+                        <p className="font-medium text-slate-100">{meta.label}</p>
+                        <p className="text-[11px] text-slate-500">{meta.role}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-3 font-mono">{formatNumber(agent.messageCount)}</td>
+                  <td className="px-3 py-3.5 font-mono text-slate-300">{formatNumber(agent.messageCount)}</td>
                   {anyHasBilling && (
                     <>
-                      <td className="px-3 py-3 font-mono text-slate-100">
+                      <td className="px-3 py-3.5 font-mono font-medium text-slate-100">
                         {agent.hasBillingProvider ? formatCost(agent.billingCost) : "-"}
                       </td>
-                      <td className="px-3 py-3 font-mono">
+                      <td className="px-3 py-3.5 font-mono text-slate-400">
                         {agent.hasBillingProvider ? formatCost(agent.avgCostPerMessage) : "-"}
                       </td>
                     </>
                   )}
-                  <td className="px-3 py-3 font-mono">
+                  <td className="px-3 py-3.5 font-mono text-slate-400">
                     {formatTokens(agent.totalTokensIn)} / {formatTokens(agent.totalTokensOut)}
                   </td>
-                  <td className="px-3 py-3 font-mono">{formatPercent(agent.cacheHitRate)}</td>
-                  <td className="px-3 py-3 font-mono">{formatDuration(agent.avgResponseTime)}</td>
+                  <td className="px-3 py-3.5">
+                    <div className="flex items-center gap-2">
+                      <div className="h-1.5 w-12 overflow-hidden rounded-full bg-slate-800">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{
+                            width: `${Math.min(agent.cacheHitRate * 100, 100)}%`,
+                            backgroundColor:
+                              agent.cacheHitRate >= 0.7
+                                ? "#22c55e"
+                                : agent.cacheHitRate >= 0.3
+                                  ? "#eab308"
+                                  : "#ef4444",
+                          }}
+                        />
+                      </div>
+                      <span className="font-mono text-slate-400">{formatPercent(agent.cacheHitRate)}</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-3.5 font-mono text-slate-400">{formatDuration(agent.avgResponseTime)}</td>
                 </tr>
               );
             })}

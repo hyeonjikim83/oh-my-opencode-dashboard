@@ -94,6 +94,47 @@ export async function readMessagesForSession(
   }
 }
 
+export async function readMessagesForSessionTree(
+  sessionId: string,
+): Promise<RawMessage[]> {
+  const db = getDb();
+  if (!db) return [];
+
+  try {
+    const childIds = db
+      .prepare("SELECT id FROM session WHERE parent_id = ?")
+      .all(sessionId) as { id: string }[];
+
+    const allSessionIds = [sessionId, ...childIds.map((r) => r.id)];
+    const placeholders = allSessionIds.map(() => "?").join(",");
+
+    const rows = db
+      .prepare(
+        `SELECT id, session_id, data FROM message WHERE session_id IN (${placeholders}) ORDER BY time_created ASC`,
+      )
+      .all(...allSessionIds) as MessageRow[];
+    return rows.map(messageRowToRaw);
+  } finally {
+    db.close();
+  }
+}
+
+export async function readChildSessions(
+  parentId: string,
+): Promise<RawSession[]> {
+  const db = getDb();
+  if (!db) return [];
+
+  try {
+    const rows = db
+      .prepare("SELECT * FROM session WHERE parent_id = ? ORDER BY time_created ASC")
+      .all(parentId) as SessionRow[];
+    return rows.map(sessionRowToRaw);
+  } finally {
+    db.close();
+  }
+}
+
 export async function readAllMessages(): Promise<RawMessage[]> {
   const db = getDb();
   if (!db) return [];

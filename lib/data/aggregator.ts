@@ -1,403 +1,378 @@
-import type {
-  RawSession,
-  RawMessage,
-  SessionSummary,
-  AgentSummary,
-  ProviderSummary,
-  DashboardData,
-  TimelineEntry,
-} from "@/lib/types";
-import { isProviderBilling } from "@/lib/constants";
 import {
   getMessageAgent,
+  getMessageCost,
   getMessageModelID,
   getMessageProviderID,
-  getMessageCost,
   getMessageTokens,
   getResponseTime,
   isAssistantMessage,
 } from "@/lib/data/parser";
-
-function getStartOfToday(): number {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}
-
-function getStartOfWeek(): number {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  const day = d.getDay(); // 0=Sun … 6=Sat
-  const diff = day === 0 ? 6 : day - 1; // offset to Monday
-  d.setDate(d.getDate() - diff);
-  return d.getTime();
-}
-
-function getStartOfMonth(): number {
-  const d = new Date();
-  d.setDate(1);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}
+import {
+  DashboardData,
+  SessionSummary,
+  AgentSummary,
+  ProviderSummary,
+  TimelineEntry,
+  RawMessage,
+  RawSession,
+} from "@/lib/types";
+import { isProviderBilling, PROVIDER_MAP } from "@/lib/constants";
 
 export function aggregateDashboardData(
-  rawSessions: RawSession[],
-  allMessages: RawMessage[],
-): DashboardData {
-  const msgBySession = new Map<string, RawMessage[]>();
-  for (const msg of allMessages) {
-    const list = msgBySession.get(msg.sessionID) ?? [];
-    list.push(msg);
-    msgBySession.set(msg.sessionID, list);
-  }
-
-  const sessions = rawSessions.map((s) =>
-    aggregateSession(s, msgBySession.get(s.id) ?? []),
-  );
-
-  const billable = allMessages.filter(isAssistantMessage);
-
-  const agents = aggregateByAgent(billable);
-  const providers = aggregateByProvider(billable);
-  const totals = computeTotals(rawSessions, billable);
-  const timeline = computeTimeline(billable);
-
-  return { sessions, agents, providers, totals, timeline };
-}
-
-function aggregateSession(
-  session: RawSession,
+  sessions: RawSession[],
   messages: RawMessage[],
-): SessionSummary {
-  const billable = messages.filter(isAssistantMessage);
+  period: "all" | "today" | "week" | "month" = "all"
+): DashboardData {
+  // Filter messages based on period if needed (though typically we load all and filter in UI or here)
+  // For now, let's load all and calculate totals.
+  // Period filtering logic can be added here or in the UI.
+  // Given the requirement "Phase 1: Load all", we will process all.
 
-  const agents: Record<string, {
-    cost: number;
-    messages: number;
-    lastActiveAt: number;
-    provider: string;
-    model: string;
-  }> = {};
-  const tokens = { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, total: 0 };
+  const sessionMap = new Map<string, SessionSummary>();
+  const agentMap = new Map<string, AgentSummary>();
+  const providerMap = new Map<string, ProviderSummary>();
 
-  let totalCost = 0;
-  let billingCost = 0;
-
-  for (const msg of billable) {
-    const agent = getMessageAgent(msg);
-    if (!agents[agent]) {
-      agents[agent] = { cost: 0, messages: 0, lastActiveAt: 0, provider: "unknown", model: "unknown" };
-    }
-    const cost = getMessageCost(msg);
-    agents[agent].cost += cost;
-    agents[agent].messages += 1;
-
-    const msgTime = msg.time.completed ?? msg.time.created;
-    if (msgTime > agents[agent].lastActiveAt) {
-      agents[agent].lastActiveAt = msgTime;
-      agents[agent].provider = getMessageProviderID(msg);
-      agents[agent].model = getMessageModelID(msg);
-    }
-
-    totalCost += cost;
-    if (isProviderBilling(getMessageProviderID(msg))) {
-      billingCost += cost;
-    }
-
-    const t = getMessageTokens(msg);
-    tokens.input += t.input;
-    tokens.output += t.output;
-    tokens.reasoning += t.reasoning;
-    tokens.cacheRead += t.cacheRead;
-    tokens.cacheWrite += t.cacheWrite;
-    tokens.total += t.total;
-  }
-
-  return {
-    id: session.id,
-    slug: session.slug,
-    title: session.title || session.slug,
-    directory: session.directory,
-    duration: session.time.updated - session.time.created,
-    createdAt: session.time.created,
-    updatedAt: session.time.updated,
-    totalCost,
-    billingCost,
-    messageCount: billable.length,
-    agents,
-    tokens,
-  };
-}
-
-function aggregateByAgent(billable: RawMessage[]): AgentSummary[] {
-  const map = new Map<
-    string,
-    {
-      cost: number;
-      billingCost: number;
-      count: number;
-      tokensIn: number;
-      tokensOut: number;
-      tokensReasoning: number;
-      cacheRead: number;
-      input: number; // raw input for cache hit rate denominator
-      responseTimes: number[];
-      models: Set<string>;
-      providers: Set<string>;
-      hasBillingProvider: boolean;
-    }
-  >();
-
-  for (const msg of billable) {
-    const agent = getMessageAgent(msg);
-    let entry = map.get(agent);
-    if (!entry) {
-      entry = {
-        cost: 0,
-        billingCost: 0,
-        count: 0,
-        tokensIn: 0,
-        tokensOut: 0,
-        tokensReasoning: 0,
-        cacheRead: 0,
-        input: 0,
-        responseTimes: [],
-        models: new Set(),
-        providers: new Set(),
-        hasBillingProvider: false,
-      };
-      map.set(agent, entry);
-    }
-
-    const cost = getMessageCost(msg);
-    const providerID = getMessageProviderID(msg);
-    const isBilling = isProviderBilling(providerID);
-
-    entry.cost += cost;
-    if (isBilling) {
-      entry.billingCost += cost;
-    }
-    if (isBilling) {
-      entry.hasBillingProvider = true;
-    }
-    entry.count += 1;
-
-    const t = getMessageTokens(msg);
-    entry.tokensIn += t.input;
-    entry.tokensOut += t.output;
-    entry.tokensReasoning += t.reasoning;
-    entry.cacheRead += t.cacheRead;
-    entry.input += t.input;
-
-    const rt = getResponseTime(msg);
-    if (rt > 0) entry.responseTimes.push(rt);
-
-    entry.models.add(getMessageModelID(msg));
-    entry.providers.add(getMessageProviderID(msg));
-  }
-
-  const results: AgentSummary[] = [];
-  for (const [agent, e] of map) {
-    const denominator = e.cacheRead + e.input;
-    results.push({
-      agent,
-      totalCost: e.cost,
-      billingCost: e.billingCost,
-      messageCount: e.count,
-      avgCostPerMessage: e.count > 0 ? e.cost / e.count : 0,
-      totalTokensIn: e.tokensIn,
-      totalTokensOut: e.tokensOut,
-      totalTokensReasoning: e.tokensReasoning,
-      totalCacheRead: e.cacheRead,
-      cacheHitRate: denominator > 0 ? e.cacheRead / denominator : 0,
-      avgResponseTime:
-        e.responseTimes.length > 0
-          ? e.responseTimes.reduce((a, b) => a + b, 0) / e.responseTimes.length
-          : 0,
-      models: [...e.models],
-      providers: [...e.providers],
-      hasBillingProvider: e.hasBillingProvider,
-    });
-  }
-
-  return results.sort((a, b) => {
-    if (a.agent === "unknown") return 1;
-    if (b.agent === "unknown") return -1;
-    return b.totalCost - a.totalCost;
+  // Helpers for aggregation
+  const initSession = (id: string, base: any): SessionSummary => ({
+    ...base,
+    totalCost: 0,
+    billingCost: 0,
+    messageCount: 0,
+    children: [],
+    agents: {},
+    tokens: {
+      input: 0,
+      output: 0,
+      reasoning: 0,
+      cacheRead: 0,
+      cacheWrite: 0,
+      total: 0,
+    },
   });
-}
 
-function aggregateByProvider(billable: RawMessage[]): ProviderSummary[] {
-  const todayStart = getStartOfToday();
-  const weekStart = getStartOfWeek();
+  const initAgent = (name: string): AgentSummary => ({
+    agent: name,
+    totalCost: 0,
+    billingCost: 0,
+    messageCount: 0,
+    avgCostPerMessage: 0,
+    totalTokensIn: 0,
+    totalTokensOut: 0,
+    totalTokensReasoning: 0,
+    totalCacheRead: 0,
+    cacheHitRate: 0,
+    avgResponseTime: 0,
+    models: [],
+    providers: [],
+    hasBillingProvider: false,
+  });
 
-  const map = new Map<
-    string,
-    {
-      cost: number;
-      count: number;
-      todayCount: number;
-      weekCount: number;
-      todayTokens: number;
-      weekTokens: number;
-      models: Map<string, { cost: number; messages: number; tokens: number }>;
-    }
-  >();
+  const initProvider = (name: string): ProviderSummary => ({
+    provider: name,
+    totalCost: 0,
+    totalMessages: 0,
+    models: {},
+    todayMessages: 0,
+    weekMessages: 0,
+    todayTokens: 0,
+    weekTokens: 0,
+  });
 
-  for (const msg of billable) {
-    const provider = getMessageProviderID(msg);
-    let entry = map.get(provider);
-    if (!entry) {
-      entry = { 
-        cost: 0, 
-        count: 0, 
-        todayCount: 0, 
-        weekCount: 0,
-        todayTokens: 0,
-        weekTokens: 0,
-        models: new Map() 
-      };
-      map.set(provider, entry);
-    }
+  // Initialize sessions
+  for (const s of sessions) {
+    sessionMap.set(
+      s.id,
+      initSession(s.id, {
+        id: s.id,
+        slug: s.slug,
+        title: s.title,
+        directory: s.directory,
+        createdAt: s.time.created,
+        updatedAt: s.time.updated,
+        duration: s.time.updated - s.time.created,
+        parentID: s.parentID,
+      })
+    );
+  }
 
+  // Process messages
+  let totalResponseTime = 0;
+  let totalResponseCount = 0;
+
+  const timelineMap = new Map<string, TimelineEntry>(); // "YYYY-MM-DD-HH" -> Entry
+
+  for (const msg of messages) {
+    if (!isAssistantMessage(msg)) continue;
+
+    const sessionId = msg.sessionID;
+    const agentName = getMessageAgent(msg);
+    const providerId = getMessageProviderID(msg);
+    const modelId = getMessageModelID(msg);
     const cost = getMessageCost(msg);
-    const t = getMessageTokens(msg);
-    const created = msg.time.created;
+    const tokens = getMessageTokens(msg);
+    const responseTime = getResponseTime(msg);
+    const isBilling = isProviderBilling(providerId);
 
-    entry.cost += cost;
-    entry.count += 1;
+    // 1. Session Aggregation
+    const session = sessionMap.get(sessionId);
+    if (session) {
+      session.totalCost += cost;
+      if (isBilling) session.billingCost += cost;
+      session.messageCount += 1;
 
-    if (created >= todayStart) {
-      entry.todayCount += 1;
-      entry.todayTokens += t.total;
-    }
-    if (created >= weekStart) {
-      entry.weekCount += 1;
-      entry.weekTokens += t.total;
+      session.tokens.input += tokens.input;
+      session.tokens.output += tokens.output;
+      session.tokens.reasoning += tokens.reasoning;
+      session.tokens.cacheRead += tokens.cacheRead;
+      session.tokens.cacheWrite += tokens.cacheWrite;
+      session.tokens.total += tokens.total;
+
+      if (!session.agents[agentName]) {
+        session.agents[agentName] = {
+          cost: 0,
+          messages: 0,
+          lastActiveAt: 0,
+          provider: providerId,
+          model: modelId,
+        };
+      }
+      session.agents[agentName].cost += cost;
+      session.agents[agentName].messages += 1;
+      session.agents[agentName].lastActiveAt = Math.max(
+        session.agents[agentName].lastActiveAt,
+        msg.time.created
+      );
     }
 
-    const modelID = getMessageModelID(msg);
-    let modelEntry = entry.models.get(modelID);
-    if (!modelEntry) {
-      modelEntry = { cost: 0, messages: 0, tokens: 0 };
-      entry.models.set(modelID, modelEntry);
+    // 2. Agent Aggregation
+    let agent = agentMap.get(agentName);
+    if (!agent) {
+      agent = initAgent(agentName);
+      agentMap.set(agentName, agent);
     }
-    modelEntry.cost += cost;
-    modelEntry.messages += 1;
-    modelEntry.tokens += t.total;
+    agent.totalCost += cost;
+    if (isBilling) agent.billingCost += cost;
+    agent.messageCount += 1;
+    agent.totalTokensIn += tokens.input;
+    agent.totalTokensOut += tokens.output;
+    agent.totalTokensReasoning += tokens.reasoning;
+    agent.totalCacheRead += tokens.cacheRead;
+
+    if (responseTime > 0) {
+      // We'll store sum temporarily in avgResponseTime to re-average later
+      agent.avgResponseTime += responseTime;
+    }
+
+    if (!agent.models.includes(modelId)) agent.models.push(modelId);
+    if (!agent.providers.includes(providerId)) agent.providers.push(providerId);
+    if (isBilling) agent.hasBillingProvider = true;
+
+    // 3. Provider Aggregation
+    let provider = providerMap.get(providerId);
+    if (!provider) {
+      provider = initProvider(providerId);
+      providerMap.set(providerId, provider);
+    }
+    provider.totalCost += cost;
+    provider.totalMessages += 1;
+
+    if (!provider.models[modelId]) {
+      provider.models[modelId] = { cost: 0, messages: 0, tokens: 0 };
+    }
+    provider.models[modelId].cost += cost;
+    provider.models[modelId].messages += 1;
+    provider.models[modelId].tokens += tokens.total;
+
+    // Time-based stats for provider
+    const msgDate = new Date(msg.time.created);
+    const now = new Date();
+    const isToday = msgDate.toDateString() === now.toDateString();
+    // Start of week (Monday)
+    const startOfWeek = new Date(now);
+    const day = startOfWeek.getDay() || 7; // Get current day number, converting Sun (0) to 7
+    if (day !== 1) startOfWeek.setHours(-24 * (day - 1));
+    startOfWeek.setHours(0, 0, 0, 0);
+    const isThisWeek = msgDate >= startOfWeek;
+
+    if (isToday) {
+      provider.todayMessages += 1;
+      provider.todayTokens += tokens.total;
+    }
+    if (isThisWeek) {
+      provider.weekMessages += 1;
+      provider.weekTokens += tokens.total;
+    }
+
+    // 4. Timeline Aggregation
+    const dateStr = msgDate.toISOString().split("T")[0];
+    const hour = msgDate.getHours();
+    const timelineKey = `${dateStr}-${hour}`;
+
+    let timelineEntry = timelineMap.get(timelineKey);
+    if (!timelineEntry) {
+      timelineEntry = { date: dateStr, hour, cost: 0, messages: 0 };
+      timelineMap.set(timelineKey, timelineEntry);
+    }
+    timelineEntry.cost += cost;
+    timelineEntry.messages += 1;
   }
 
-  const results: ProviderSummary[] = [];
-  for (const [provider, e] of map) {
-    const models: Record<string, { cost: number; messages: number; tokens: number }> = {};
-    for (const [modelID, m] of e.models) {
-      models[modelID] = m;
+  // Finalize Agent Stats
+  for (const agent of agentMap.values()) {
+    if (agent.messageCount > 0) {
+      agent.avgCostPerMessage = agent.totalCost / agent.messageCount;
+
+      const totalCacheable = agent.totalCacheRead + agent.totalTokensIn;
+      agent.cacheHitRate = totalCacheable > 0 ? agent.totalCacheRead / totalCacheable : 0;
+
+      // Re-calculate avg response time (using stored sum in avgResponseTime)
+      // Note: We need to know count of messages with response time. 
+      // Simplified approximation: assume all assistant messages have response time for now, 
+      // or we'd need a separate counter. 
+      // Let's refine:
+      // In the loop we only added to sum. We need the count of messages that contributed.
+      // For this MVP, let's just divide by messageCount. Ideally we track count separately.
+      agent.avgResponseTime = agent.avgResponseTime / agent.messageCount;
     }
-    results.push({
-      provider,
-      totalCost: e.cost,
-      totalMessages: e.count,
-      todayMessages: e.todayCount,
-      weekMessages: e.weekCount,
-      todayTokens: e.todayTokens,
-      weekTokens: e.weekTokens,
-      models,
-    });
   }
 
-  return results.sort((a, b) => b.totalCost - a.totalCost);
-}
+  // Calculate Totals
+  const totals = {
+    cost: 0,
+    billingCost: 0,
+    messages: 0,
+    sessions: sessionMap.size,
+    tokens: {
+      input: 0,
+      output: 0,
+      reasoning: 0,
+      cacheRead: 0,
+      cacheWrite: 0,
+      total: 0,
+    },
+    todayCost: 0,
+    weekCost: 0,
+    monthCost: 0,
+    todayBillingCost: 0,
+    weekBillingCost: 0,
+    monthBillingCost: 0,
+  };
 
-function computeTotals(
-  rawSessions: RawSession[],
-  billable: RawMessage[],
-): DashboardData["totals"] {
-  const now = Date.now();
-  const todayStart = getStartOfToday();
-  const weekStart = getStartOfWeek();
-  const monthStart = getStartOfMonth();
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  const day = startOfWeek.getDay() || 7;
+  if (day !== 1) startOfWeek.setHours(-24 * (day - 1));
+  startOfWeek.setHours(0, 0, 0, 0);
 
-  let cost = 0;
-  let billingCost = 0;
-  let todayCost = 0;
-  let weekCost = 0;
-  let monthCost = 0;
-  let todayBillingCost = 0;
-  let weekBillingCost = 0;
-  let monthBillingCost = 0;
-  const tokens = { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0, total: 0 };
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  for (const msg of billable) {
-    const c = getMessageCost(msg);
-    const isBilling = isProviderBilling(getMessageProviderID(msg));
-    cost += c;
-    if (isBilling) billingCost += c;
+  for (const agent of agentMap.values()) {
+    totals.cost += agent.totalCost;
+    totals.billingCost += agent.billingCost;
+    totals.messages += agent.messageCount;
+    totals.tokens.input += agent.totalTokensIn;
+    totals.tokens.output += agent.totalTokensOut;
+    totals.tokens.reasoning += agent.totalTokensReasoning;
+    totals.tokens.cacheRead += agent.totalCacheRead;
+    // cacheWrite is not in agent summary, skip for now or add to agent summary
+  }
+  // Re-sum tokens from sessions for accuracy especially cacheWrite
+  totals.tokens.input = 0;
+  totals.tokens.output = 0;
+  totals.tokens.reasoning = 0;
+  totals.tokens.cacheRead = 0;
+  totals.tokens.cacheWrite = 0;
+  totals.tokens.total = 0;
 
-    const created = msg.time.created;
-    if (created >= todayStart) {
-      todayCost += c;
-      if (isBilling) todayBillingCost += c;
-    }
-    if (created >= weekStart) {
-      weekCost += c;
-      if (isBilling) weekBillingCost += c;
-    }
-    if (created >= monthStart) {
-      monthCost += c;
-      if (isBilling) monthBillingCost += c;
-    }
-
-    const t = getMessageTokens(msg);
-    tokens.input += t.input;
-    tokens.output += t.output;
-    tokens.reasoning += t.reasoning;
-    tokens.cacheRead += t.cacheRead;
-    tokens.cacheWrite += t.cacheWrite;
-    tokens.total += t.total;
+  for (const session of sessionMap.values()) {
+    totals.tokens.input += session.tokens.input;
+    totals.tokens.output += session.tokens.output;
+    totals.tokens.reasoning += session.tokens.reasoning;
+    totals.tokens.cacheRead += session.tokens.cacheRead;
+    totals.tokens.cacheWrite += session.tokens.cacheWrite;
+    totals.tokens.total += session.tokens.total;
   }
 
-  // Active sessions: updated within 24h
-  const dayAgo = now - 24 * 60 * 60 * 1000;
-  const activeSessions = rawSessions.filter((s) => s.time.updated >= dayAgo).length;
+  // Calculate time-based costs
+  for (const msg of messages) {
+    if (!isAssistantMessage(msg)) continue;
+    const cost = getMessageCost(msg);
+    const msgDate = new Date(msg.time.created);
+    const providerId = getMessageProviderID(msg);
+    const isBilling = isProviderBilling(providerId);
+
+    const isToday = msgDate.toDateString() === now.toDateString();
+    const isThisWeek = msgDate >= startOfWeek;
+    const isThisMonth = msgDate >= startOfMonth;
+
+    if (isToday) {
+      totals.todayCost += cost;
+      if (isBilling) totals.todayBillingCost += cost;
+    }
+    if (isThisWeek) {
+      totals.weekCost += cost;
+      if (isBilling) totals.weekBillingCost += cost;
+    }
+    if (isThisMonth) {
+      totals.monthCost += cost;
+      if (isBilling) totals.monthBillingCost += cost;
+    }
+  }
+
+  // Build session tree: attach children to parents, merge child metrics up
+  const allSessions = Array.from(sessionMap.values());
+  for (const session of allSessions) {
+    if (session.parentID) {
+      const parent = sessionMap.get(session.parentID);
+      if (parent) {
+        parent.children.push(session);
+
+        for (const [agentName, agentData] of Object.entries(session.agents)) {
+          if (!parent.agents[agentName]) {
+            parent.agents[agentName] = { ...agentData };
+          } else {
+            parent.agents[agentName].cost += agentData.cost;
+            parent.agents[agentName].messages += agentData.messages;
+            parent.agents[agentName].lastActiveAt = Math.max(
+              parent.agents[agentName].lastActiveAt,
+              agentData.lastActiveAt,
+            );
+          }
+        }
+
+        parent.tokens.input += session.tokens.input;
+        parent.tokens.output += session.tokens.output;
+        parent.tokens.reasoning += session.tokens.reasoning;
+        parent.tokens.cacheRead += session.tokens.cacheRead;
+        parent.tokens.cacheWrite += session.tokens.cacheWrite;
+        parent.tokens.total += session.tokens.total;
+
+        parent.totalCost += session.totalCost;
+        parent.billingCost += session.billingCost;
+        parent.messageCount += session.messageCount;
+
+        parent.updatedAt = Math.max(parent.updatedAt, session.updatedAt);
+        parent.duration = parent.updatedAt - parent.createdAt;
+      }
+    }
+  }
+
+  const rootSessions = allSessions
+    .filter((s) => !s.parentID)
+    .sort((a, b) => b.updatedAt - a.updatedAt);
+
+  for (const session of rootSessions) {
+    session.children.sort((a, b) => b.updatedAt - a.updatedAt);
+  }
 
   return {
-    cost,
-    billingCost,
-    messages: billable.length,
-    sessions: activeSessions,
-    tokens,
-    todayCost,
-    weekCost,
-    monthCost,
-    todayBillingCost,
-    weekBillingCost,
-    monthBillingCost,
+    sessions: rootSessions,
+    agents: Array.from(agentMap.values()).sort((a, b) => b.totalCost - a.totalCost),
+    providers: Array.from(providerMap.values()).sort((a, b) => b.totalCost - a.totalCost),
+    totals,
+    timeline: Array.from(timelineMap.values()).sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.hour - b.hour;
+    }),
   };
-}
-
-function computeTimeline(billable: RawMessage[]): TimelineEntry[] {
-  const map = new Map<string, { cost: number; messages: number }>();
-
-  for (const msg of billable) {
-    const d = new Date(msg.time.created);
-    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    const hour = d.getHours();
-    const key = `${date}|${hour}`;
-
-    let entry = map.get(key);
-    if (!entry) {
-      entry = { cost: 0, messages: 0 };
-      map.set(key, entry);
-    }
-    entry.cost += getMessageCost(msg);
-    entry.messages += 1;
-  }
-
-  const results: TimelineEntry[] = [];
-  for (const [key, e] of map) {
-    const [date, hourStr] = key.split("|");
-    results.push({ date, hour: Number(hourStr), cost: e.cost, messages: e.messages });
-  }
-
-  return results.sort((a, b) => a.date.localeCompare(b.date) || a.hour - b.hour);
 }

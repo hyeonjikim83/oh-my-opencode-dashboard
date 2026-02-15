@@ -27,8 +27,11 @@ export const PROVIDER_MAP: Record<string, ProviderMeta> = {
     name: "Codex (OpenAI)",
     color: "#10B981",
     icon: "🧠",
-    billingType: "billing",
+    billingType: "account",
+    weeklyMessageLimit: 1000,
+    dailyMessageLimit: 200,
     models: {
+      "gpt-5.3-codex": { name: "GPT 5.3 Codex" },
       "gpt-5.2": { name: "GPT 5.2" },
       "gpt-5.2-codex": { name: "GPT 5.2 Codex" },
       "gpt-5.1": { name: "GPT 5.1" },
@@ -136,6 +139,16 @@ export const AGENT_META: Record<
     emoji: "\u{1F441}\uFE0F",
     label: "Looker",
     role: "Vision",
+  },
+  "sisyphus-junior": {
+    emoji: "\u{1FAA8}",
+    label: "Sisyphus Jr.",
+    role: "Sub-orchestrator",
+  },
+  compaction: {
+    emoji: "\u{1F5DC}\uFE0F",
+    label: "Compaction",
+    role: "Compressor",
   },
 };
 

@@ -66,6 +66,8 @@ export interface SessionSummary {
   totalCost: number;
   billingCost: number;
   messageCount: number;
+  parentID?: string;
+  children: SessionSummary[];
   agents: Record<string, {
     cost: number;
     messages: number;

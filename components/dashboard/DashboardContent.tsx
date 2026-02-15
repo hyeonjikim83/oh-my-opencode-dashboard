@@ -13,10 +13,14 @@ interface DashboardContentProps {
 
 export function DashboardContent({ data }: DashboardContentProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <OfficeFloorMap sessions={data.sessions} totals={data.totals} />
 
       <SummaryCards totals={data.totals} />
+
+      <div className="relative">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-slate-700/30 to-transparent" />
+      </div>
 
       <ProviderBreakdown providers={data.providers} />
       <AgentTable agents={data.agents} />
