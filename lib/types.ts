@@ -85,6 +85,18 @@ export interface SessionSummary {
   };
 }
 
+export type Period = "today" | "week" | "month" | "all";
+
+export interface PeriodMetrics {
+  messages: number;
+  billingCost: number;
+  totalCost: number;
+  tokensIn: number;
+  tokensOut: number;
+  tokensTotal: number;
+  cacheRead: number;
+}
+
 export interface AgentSummary {
   agent: string;
   totalCost: number;
@@ -100,6 +112,7 @@ export interface AgentSummary {
   models: string[];
   providers: string[];
   hasBillingProvider: boolean;
+  periods: Record<Exclude<Period, "all">, PeriodMetrics>;
 }
 
 export interface ProviderSummary {
@@ -108,15 +121,24 @@ export interface ProviderSummary {
   totalMessages: number;
   models: Record<string, { cost: number; messages: number; tokens: number }>;
   todayMessages: number;
-  weekMessages: number;
+  todayCost: number;
   todayTokens: number;
+  weekMessages: number;
+  weekCost: number;
   weekTokens: number;
+  monthMessages: number;
+  monthCost: number;
+  monthTokens: number;
+  fiveHourMessages: number;
+  fiveHourCost: number;
+  fiveHourTokens: number;
 }
 
 export interface DashboardData {
   sessions: SessionSummary[];
   agents: AgentSummary[];
   providers: ProviderSummary[];
+  codexUsage?: CodexUsageSnapshot;
   totals: {
     cost: number;
     billingCost: number;
@@ -136,6 +158,14 @@ export interface DashboardData {
     todayBillingCost: number;
     weekBillingCost: number;
     monthBillingCost: number;
+    fiveHourCost: number;
+    fiveHourBillingCost: number;
+    fiveHourSubscriptionCost: number;
+    periods: Record<Exclude<Period, "all">, {
+      billingCost: number;
+      messages: number;
+      tokens: { input: number; output: number; total: number };
+    }>;
   };
   timeline: TimelineEntry[];
 }
@@ -152,4 +182,35 @@ export interface TreemapNode {
   value: number;
   children?: TreemapNode[];
   color?: string;
+}
+
+export interface CodexRateLimitWindow {
+  /** 0–100 (not 0–1) */
+  usedPercent: number;
+  /** e.g. 18 000 = 5 h, 604 800 = 1 w */
+  windowSeconds: number;
+  resetAfterSeconds: number;
+  /** Unix epoch seconds (not ms) */
+  resetAt: number;
+}
+
+export interface CodexAdditionalRateLimit {
+  limitName: string;
+  allowed: boolean;
+  limitReached: boolean;
+  primaryWindow?: CodexRateLimitWindow;
+  secondaryWindow?: CodexRateLimitWindow;
+}
+
+export interface CodexUsageSnapshot {
+  /** "pro" | "plus" | "free" — raw string from OpenAI */
+  planType: string;
+  allowed: boolean;
+  limitReached: boolean;
+  /** Short rolling window — typically 5 h */
+  primaryWindow?: CodexRateLimitWindow;
+  /** Long rolling window — typically 1 w */
+  secondaryWindow?: CodexRateLimitWindow;
+  additionalLimits: CodexAdditionalRateLimit[];
+  fetchedAt: number;
 }

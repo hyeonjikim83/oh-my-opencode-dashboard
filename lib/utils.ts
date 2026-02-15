@@ -49,3 +49,32 @@ export function formatRelativeTime(timestamp: number): string {
   if (diff < 604_800_000) return `${Math.floor(diff / 86_400_000)}d ago`;
   return formatDate(timestamp);
 }
+
+export function formatResetCountdown(resetAfterSeconds: number): string {
+  if (resetAfterSeconds <= 0) return "now";
+  const d = Math.floor(resetAfterSeconds / 86400);
+  const h = Math.floor((resetAfterSeconds % 86400) / 3600);
+  const m = Math.floor((resetAfterSeconds % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+export function formatResetTime(resetAtEpochSeconds: number): string {
+  const d = new Date(resetAtEpochSeconds * 1000);
+  const now = new Date();
+  const diffMs = d.getTime() - now.getTime();
+  const diffDays = Math.floor(diffMs / 86_400_000);
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  if (diffDays <= 0) return time;
+  if (diffDays === 1) return `tomorrow ${time}`;
+  const weekday = d.toLocaleDateString("en-US", { weekday: "short" });
+  return `${weekday} ${time}`;
+}
+
+export function formatWindowLabel(windowSeconds: number): string {
+  const hours = windowSeconds / 3600;
+  if (hours >= 168) return "Weekly";
+  if (hours >= 24) return `${Math.round(hours / 24)}d`;
+  return `${Math.round(hours)}h`;
+}

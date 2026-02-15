@@ -2,7 +2,14 @@ export interface ProviderMeta {
   name: string;
   color: string;
   icon: string;
-  billingType: "billing" | "account";
+  /**
+   * - `"api"`: Pay-per-token API billing. No usage limits. (e.g. AWS Bedrock)
+   * - `"subscription"`: Monthly subscription with rolling window limits. (e.g. Anthropic Claude Code Max)
+   * - `"account"`: Account-based with daily/weekly message limits. (e.g. OpenAI Codex, Google)
+   */
+  billingType: "api" | "subscription" | "account";
+  /** 5h rolling window cost limit — only for subscription providers */
+  fiveHourCostLimit?: number;
   weeklyMessageLimit?: number;
   dailyMessageLimit?: number;
   /** Models available through this provider (model ID → display info) */
@@ -11,10 +18,10 @@ export interface ProviderMeta {
 
 export const PROVIDER_MAP: Record<string, ProviderMeta> = {
   "amazon-bedrock": {
-    name: "Claude Code (Bedrock)",
+    name: "AWS Bedrock",
     color: "#F97316",
     icon: "🪨",
-    billingType: "billing",
+    billingType: "api",
     models: {
       "anthropic.claude-opus-4-6-v1": { name: "Claude Opus 4.6" },
       "anthropic.claude-opus-4-5-v1": { name: "Claude Opus 4.5" },
@@ -62,7 +69,8 @@ export const PROVIDER_MAP: Record<string, ProviderMeta> = {
     name: "Anthropic (Direct)",
     color: "#EC4899",
     icon: "💬",
-    billingType: "billing",
+    billingType: "subscription",
+    fiveHourCostLimit: Number(process.env.CLAUDE_5H_LIMIT ?? 5),
     models: {
       "claude-opus-4-6": { name: "Claude Opus 4.6" },
       "claude-opus-4-5": { name: "Claude Opus 4.5" },
@@ -117,9 +125,14 @@ export const PROVIDER_MAP: Record<string, ProviderMeta> = {
   },
 };
 
-/** Helper: check if a provider uses API-based billing (shows dollar costs) */
+/** Shows dollar costs (api or subscription) */
 export function isProviderBilling(providerID: string): boolean {
-  return (PROVIDER_MAP[providerID]?.billingType ?? "billing") === "billing";
+  const t = PROVIDER_MAP[providerID]?.billingType ?? "api";
+  return t === "api" || t === "subscription";
+}
+
+export function isProviderSubscription(providerID: string): boolean {
+  return PROVIDER_MAP[providerID]?.billingType === "subscription";
 }
 
 export const AGENT_META: Record<
@@ -172,3 +185,5 @@ export const STORAGE_BASE_PATH =
 export const DB_PATH =
   process.env.OPENCODE_DB_PATH ||
   `${process.env.HOME}/.local/share/opencode/opencode.db`;
+
+export const FIVE_HOUR_MS = 5 * 60 * 60 * 1000;

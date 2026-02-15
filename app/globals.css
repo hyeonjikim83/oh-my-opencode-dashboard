@@ -18,6 +18,7 @@ html.dark body {
   background: #020617;
   color: #cbd5e1;
 }
+
 html.dark * {
   border-color: #1e293b;
 }
@@ -27,80 +28,207 @@ html.light body {
   background: #f8fafc;
   color: #1e293b;
 }
+
 html.light * {
   border-color: #e2e8f0;
 }
 
-html.light .bg-slate-950 { background-color: #f8fafc !important; }
-html.light .bg-slate-950\/90 { background-color: rgba(248, 250, 252, 0.9) !important; }
-html.light .bg-slate-950\/80 { background-color: rgba(248, 250, 252, 0.8) !important; }
-html.light .bg-slate-950\/50 { background-color: rgba(248, 250, 252, 0.5) !important; }
-html.light .bg-slate-950\/40 { background-color: rgba(248, 250, 252, 0.4) !important; }
+html.light .bg-slate-950 {
+  background-color: #f8fafc !important;
+}
 
-html.light .bg-slate-900 { background-color: #ffffff !important; }
-html.light .bg-slate-900\/80 { background-color: rgba(255, 255, 255, 0.8) !important; }
-html.light .bg-slate-900\/40 { background-color: rgba(255, 255, 255, 0.4) !important; }
+html.light .bg-slate-950\/90 {
+  background-color: rgba(248, 250, 252, 0.9) !important;
+}
 
-html.light .bg-slate-800 { background-color: #f1f5f9 !important; }
-html.light .bg-slate-800\/80 { background-color: rgba(241, 245, 249, 0.8) !important; }
-html.light .bg-slate-800\/60 { background-color: rgba(241, 245, 249, 0.6) !important; }
-html.light .bg-slate-800\/50 { background-color: rgba(241, 245, 249, 0.5) !important; }
-html.light .bg-slate-800\/40 { background-color: rgba(241, 245, 249, 0.4) !important; }
-html.light .bg-slate-800\/30 { background-color: rgba(241, 245, 249, 0.3) !important; }
+html.light .bg-slate-950\/80 {
+  background-color: rgba(248, 250, 252, 0.8) !important;
+}
 
-html.light .text-slate-50 { color: #0f172a !important; }
-html.light .text-slate-100 { color: #1e293b !important; }
-html.light .text-slate-200 { color: #334155 !important; }
-html.light .text-slate-300 { color: #475569 !important; }
-html.light .text-slate-400 { color: #64748b !important; }
-html.light .text-slate-500 { color: #94a3b8 !important; }
+html.light .bg-slate-950\/50 {
+  background-color: rgba(248, 250, 252, 0.5) !important;
+}
 
-html.light .border-slate-800 { border-color: #e2e8f0 !important; }
-html.light .border-slate-800\/60 { border-color: rgba(226, 232, 240, 0.6) !important; }
-html.light .border-slate-800\/50 { border-color: rgba(226, 232, 240, 0.5) !important; }
-html.light .border-slate-800\/40 { border-color: rgba(226, 232, 240, 0.4) !important; }
-html.light .border-slate-800\/30 { border-color: rgba(226, 232, 240, 0.3) !important; }
+html.light .bg-slate-950\/40 {
+  background-color: rgba(248, 250, 252, 0.4) !important;
+}
 
-html.light .ring-white\/5 { --tw-ring-color: rgba(0, 0, 0, 0.05) !important; }
-html.light .ring-white\/10 { --tw-ring-color: rgba(0, 0, 0, 0.08) !important; }
+html.light .bg-slate-900 {
+  background-color: #ffffff !important;
+}
 
-html.light .divide-slate-800 > :not(:last-child) { border-color: #e2e8f0 !important; }
-html.light .divide-slate-800\/60 > :not(:last-child) { border-color: rgba(226, 232, 240, 0.6) !important; }
-html.light .divide-slate-800\/30 > :not(:last-child) { border-color: rgba(226, 232, 240, 0.3) !important; }
+html.light .bg-slate-900\/80 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
 
-html.light .border-white\/5 { border-color: rgba(0, 0, 0, 0.05) !important; }
+html.light .bg-slate-900\/40 {
+  background-color: rgba(255, 255, 255, 0.4) !important;
+}
 
-html.light .hover\:bg-slate-800\/30:hover { background-color: rgba(241, 245, 249, 0.5) !important; }
-html.light .hover\:bg-slate-800\/60:hover { background-color: rgba(241, 245, 249, 0.7) !important; }
-html.light .hover\:bg-slate-700\/80:hover { background-color: rgba(226, 232, 240, 0.8) !important; }
-html.light .hover\:border-slate-800\/60:hover { border-color: rgba(226, 232, 240, 0.8) !important; }
-html.light .hover\:border-slate-600:hover { border-color: #cbd5e1 !important; }
-html.light .hover\:text-white:hover { color: #0f172a !important; }
-html.light .hover\:text-slate-300:hover { color: #334155 !important; }
-html.light .hover\:text-slate-200:hover { color: #1e293b !important; }
+html.light .bg-slate-800 {
+  background-color: #f1f5f9 !important;
+}
 
-html.light .via-slate-700\/30 { --tw-gradient-via: rgba(226, 232, 240, 0.5) !important; }
-html.light .via-violet-500\/40 { --tw-gradient-via: rgba(139, 92, 246, 0.25) !important; }
+html.light .bg-slate-800\/80 {
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+
+html.light .bg-slate-800\/60 {
+  background-color: rgba(241, 245, 249, 0.6) !important;
+}
+
+html.light .bg-slate-800\/50 {
+  background-color: rgba(241, 245, 249, 0.5) !important;
+}
+
+html.light .bg-slate-800\/40 {
+  background-color: rgba(241, 245, 249, 0.4) !important;
+}
+
+html.light .bg-slate-800\/30 {
+  background-color: rgba(241, 245, 249, 0.3) !important;
+}
+
+html.light .bg-slate-700 {
+  background-color: #e2e8f0 !important;
+}
+
+html.light .bg-slate-700\/80 {
+  background-color: rgba(226, 232, 240, 0.8) !important;
+}
+
+html.light .text-slate-50 {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-100 {
+  color: #1e293b !important;
+}
+
+html.light .text-slate-200 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-300 {
+  color: #475569 !important;
+}
+
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+html.light .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+html.light .border-slate-800 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .border-slate-800\/60 {
+  border-color: rgba(226, 232, 240, 0.6) !important;
+}
+
+html.light .border-slate-800\/50 {
+  border-color: rgba(226, 232, 240, 0.5) !important;
+}
+
+html.light .border-slate-800\/40 {
+  border-color: rgba(226, 232, 240, 0.4) !important;
+}
+
+html.light .border-slate-800\/30 {
+  border-color: rgba(226, 232, 240, 0.3) !important;
+}
+
+html.light .ring-white\/5 {
+  --tw-ring-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .ring-white\/10 {
+  --tw-ring-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light .divide-slate-800> :not(:last-child) {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .divide-slate-800\/60> :not(:last-child) {
+  border-color: rgba(226, 232, 240, 0.6) !important;
+}
+
+html.light .divide-slate-800\/30> :not(:last-child) {
+  border-color: rgba(226, 232, 240, 0.3) !important;
+}
+
+html.light .border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .hover\:bg-slate-800\/30:hover {
+  background-color: rgba(241, 245, 249, 0.5) !important;
+}
+
+html.light .hover\:bg-slate-800\/60:hover {
+  background-color: rgba(241, 245, 249, 0.7) !important;
+}
+
+html.light .hover\:bg-slate-700\/80:hover {
+  background-color: rgba(226, 232, 240, 0.8) !important;
+}
+
+html.light .hover\:border-slate-800\/60:hover {
+  border-color: rgba(226, 232, 240, 0.8) !important;
+}
+
+html.light .hover\:border-slate-600:hover {
+  border-color: #cbd5e1 !important;
+}
+
+html.light .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+html.light .hover\:text-slate-300:hover {
+  color: #334155 !important;
+}
+
+html.light .hover\:text-slate-200:hover {
+  color: #1e293b !important;
+}
+
+html.light .via-slate-700\/30 {
+  --tw-gradient-via: rgba(226, 232, 240, 0.5) !important;
+}
+
+html.light .via-violet-500\/40 {
+  --tw-gradient-via: rgba(139, 92, 246, 0.25) !important;
+}
 
 /* ── Scrollbar ─────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 html.dark ::-webkit-scrollbar-thumb {
   background: #334155;
   border-radius: 999px;
 }
+
 html.dark ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
+
 html.light ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 999px;
 }
+
 html.light ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
@@ -110,6 +238,7 @@ html.dark ::selection {
   background: rgba(139, 92, 246, 0.3);
   color: #e2e8f0;
 }
+
 html.light ::selection {
   background: rgba(139, 92, 246, 0.2);
   color: #1e293b;
@@ -117,8 +246,13 @@ html.light ::selection {
 
 /* ── Shimmer ───────────────────────────────────────── */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 html.dark .shimmer {
@@ -126,6 +260,7 @@ html.dark .shimmer {
   background-size: 200% 100%;
   animation: shimmer 2s ease-in-out infinite;
 }
+
 html.light .shimmer {
   background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 40%, #cbd5e1 50%, #e2e8f0 60%, #f1f5f9 100%);
   background-size: 200% 100%;
@@ -136,10 +271,12 @@ html.light .shimmer {
 .card-hover {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 html.dark .card-hover:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(148, 163, 184, 0.05);
 }
+
 html.light .card-hover:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
@@ -154,18 +291,34 @@ html.light .card-hover:hover {
 
 /* ── Float animation for empty states ──────────────── */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
 
 /* ── Fade-in slide ─────────────────────────────────── */
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 .animate-fade-in {
   animation: fade-in-up 0.4s ease-out both;
 }

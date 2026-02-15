@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AGENT_META } from "@/lib/constants";
-import type { AgentSummary } from "@/lib/types";
+import type { AgentSummary, Period } from "@/lib/types";
 import {
   formatCost,
   formatDuration,
@@ -22,19 +22,53 @@ type SortKey =
 
 interface AgentTableProps {
   agents: AgentSummary[];
+  period: Period;
 }
 
-function getSortableValue(agent: AgentSummary, key: SortKey): number | string {
+interface EffectiveValues {
+  messageCount: number;
+  billingCost: number;
+  tokensIn: number;
+  tokensOut: number;
+  cacheHitRate: number;
+  avgCostPerMessage: number;
+}
+
+function getEffectiveValues(agent: AgentSummary, period: Period): EffectiveValues {
+  if (period === "all") {
+    return {
+      messageCount: agent.messageCount,
+      billingCost: agent.billingCost,
+      tokensIn: agent.totalTokensIn,
+      tokensOut: agent.totalTokensOut,
+      cacheHitRate: agent.cacheHitRate,
+      avgCostPerMessage: agent.avgCostPerMessage,
+    };
+  }
+  const p = agent.periods[period];
+  const totalCacheable = p.cacheRead + p.tokensIn;
+  return {
+    messageCount: p.messages,
+    billingCost: p.billingCost,
+    tokensIn: p.tokensIn,
+    tokensOut: p.tokensOut,
+    cacheHitRate: totalCacheable > 0 ? p.cacheRead / totalCacheable : 0,
+    avgCostPerMessage: p.messages > 0 ? p.billingCost / p.messages : 0,
+  };
+}
+
+function getSortableValue(agent: AgentSummary, key: SortKey, period: Period): number | string {
   if (key === "agent") return agent.agent;
-  if (key === "messageCount") return agent.messageCount;
-  if (key === "totalCost") return agent.billingCost;
-  if (key === "avgCostPerMessage") return agent.hasBillingProvider ? agent.avgCostPerMessage : -1;
-  if (key === "tokens") return agent.totalTokensIn + agent.totalTokensOut;
-  if (key === "cacheHitRate") return agent.cacheHitRate;
+  const eff = getEffectiveValues(agent, period);
+  if (key === "messageCount") return eff.messageCount;
+  if (key === "totalCost") return eff.billingCost;
+  if (key === "avgCostPerMessage") return agent.hasBillingProvider ? eff.avgCostPerMessage : -1;
+  if (key === "tokens") return eff.tokensIn + eff.tokensOut;
+  if (key === "cacheHitRate") return eff.cacheHitRate;
   return agent.avgResponseTime;
 }
 
-export function AgentTable({ agents }: AgentTableProps) {
+export function AgentTable({ agents, period }: AgentTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("totalCost");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
@@ -45,8 +79,8 @@ export function AgentTable({ agents }: AgentTableProps) {
       if (a.agent === "unknown" && b.agent !== "unknown") return 1;
       if (b.agent === "unknown" && a.agent !== "unknown") return -1;
 
-      const aValue = getSortableValue(a, sortKey);
-      const bValue = getSortableValue(b, sortKey);
+      const aValue = getSortableValue(a, sortKey, period);
+      const bValue = getSortableValue(b, sortKey, period);
       if (typeof aValue === "string" && typeof bValue === "string") {
         return sortDir === "asc"
           ? aValue.localeCompare(bValue)
@@ -57,7 +91,7 @@ export function AgentTable({ agents }: AgentTableProps) {
       const bNumber = Number(bValue);
       return sortDir === "asc" ? aNumber - bNumber : bNumber - aNumber;
     });
-  }, [agents, sortDir, sortKey]);
+  }, [agents, sortDir, sortKey, period]);
 
   const onSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -141,10 +175,11 @@ export function AgentTable({ agents }: AgentTableProps) {
           <tbody>
             {sortedAgents.map((agent, index) => {
               const meta = AGENT_META[agent.agent] ?? {
-                emoji: "❓",
+                emoji: "?",
                 label: agent.agent,
                 role: "Unknown",
               };
+              const eff = getEffectiveValues(agent, period);
 
               return (
                 <tr
@@ -166,19 +201,19 @@ export function AgentTable({ agents }: AgentTableProps) {
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-3.5 font-mono text-slate-300">{formatNumber(agent.messageCount)}</td>
+                  <td className="px-3 py-3.5 font-mono text-slate-300">{formatNumber(eff.messageCount)}</td>
                   {anyHasBilling && (
                     <>
                       <td className="px-3 py-3.5 font-mono font-medium text-slate-100">
-                        {agent.hasBillingProvider ? formatCost(agent.billingCost) : "-"}
+                        {agent.hasBillingProvider ? formatCost(eff.billingCost) : "-"}
                       </td>
                       <td className="px-3 py-3.5 font-mono text-slate-400">
-                        {agent.hasBillingProvider ? formatCost(agent.avgCostPerMessage) : "-"}
+                        {agent.hasBillingProvider ? formatCost(eff.avgCostPerMessage) : "-"}
                       </td>
                     </>
                   )}
                   <td className="px-3 py-3.5 font-mono text-slate-400">
-                    {formatTokens(agent.totalTokensIn)} / {formatTokens(agent.totalTokensOut)}
+                    {formatTokens(eff.tokensIn)} / {formatTokens(eff.tokensOut)}
                   </td>
                   <td className="px-3 py-3.5">
                     <div className="flex items-center gap-2">
@@ -186,17 +221,17 @@ export function AgentTable({ agents }: AgentTableProps) {
                         <div
                           className="h-full rounded-full transition-all"
                           style={{
-                            width: `${Math.min(agent.cacheHitRate * 100, 100)}%`,
+                            width: `${Math.min(eff.cacheHitRate * 100, 100)}%`,
                             backgroundColor:
-                              agent.cacheHitRate >= 0.7
+                              eff.cacheHitRate >= 0.7
                                 ? "#22c55e"
-                                : agent.cacheHitRate >= 0.3
+                                : eff.cacheHitRate >= 0.3
                                   ? "#eab308"
                                   : "#ef4444",
                           }}
                         />
                       </div>
-                      <span className="font-mono text-slate-400">{formatPercent(agent.cacheHitRate)}</span>
+                      <span className="font-mono text-slate-400">{formatPercent(eff.cacheHitRate)}</span>
                     </div>
                   </td>
                   <td className="px-3 py-3.5 font-mono text-slate-400">{formatDuration(agent.avgResponseTime)}</td>

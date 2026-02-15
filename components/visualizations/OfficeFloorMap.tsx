@@ -295,7 +295,7 @@ function SessionRoom({
 
   return (
     <div
-      className="overflow-hidden rounded-lg"
+      className="flex h-full flex-col overflow-hidden rounded-lg"
       style={{ border: `1px solid ${t.border}` }}
     >
       <div className="flex items-baseline justify-between gap-2 px-3 py-1.5" style={{ background: t.wall }}>
@@ -308,8 +308,8 @@ function SessionRoom({
         </span>
       </div>
 
-      <div className="p-3" style={{ background: t.floor, minHeight: 170 }}>
-        <div className="mb-3 flex min-h-[90px] flex-wrap items-end justify-center gap-4">
+      <div className="flex flex-1 flex-col p-3" style={{ background: t.floor, minHeight: 170 }}>
+        <div className="mb-3 flex min-h-[90px] flex-1 flex-wrap items-end justify-center gap-4">
           {agentEntries.length > 0 ? (
             agentEntries.map(([name, data], i) => (
               <AgentChar
