@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Chivo, IBM_Plex_Mono } from "next/font/google";
 import "@/app/globals.css";
 
-const inter = Inter({
+const chivo = Chivo({
   variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const ibmPlexMono = IBM_Plex_Mono({
   variable: "--font-mono",
+  weight: ["400", "500", "600"],
   subsets: ["latin"],
 });
 
@@ -25,12 +26,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} bg-slate-950 font-sans text-slate-300 antialiased`}
+        className={`${chivo.variable} ${ibmPlexMono.variable} font-sans text-slate-300 antialiased`}
       >
-        <div className="min-h-screen">
-          <header className="border-b border-slate-800 bg-slate-950/90 backdrop-blur">
-            <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-              <h1 className="text-lg font-semibold tracking-tight text-slate-100 sm:text-xl">
+        <div className="dashboard-grid-overlay" />
+        <div className="dashboard-shell min-h-screen pb-8">
+          <header className="sticky top-0 z-20 border-b border-cyan-100/10 bg-slate-950/55 backdrop-blur-xl">
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
+              <h1 className="bg-gradient-to-r from-cyan-100 via-slate-100 to-amber-200 bg-clip-text text-lg font-semibold tracking-tight text-transparent sm:text-2xl">
                 Oh-My-OpenCode Agent Usage Dashboard
               </h1>
             </div>
