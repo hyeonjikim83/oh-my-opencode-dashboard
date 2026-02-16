@@ -22,8 +22,9 @@ import { FIVE_HOUR_MS, isProviderBilling, isProviderSubscription } from "@/lib/c
 export function aggregateDashboardData(
   sessions: RawSession[],
   messages: RawMessage[],
-  _period: "all" | "today" | "week" | "month" = "all"
+  period: "all" | "today" | "week" | "month" = "all"
 ): DashboardData {
+  void period;
   // Filter messages based on period if needed (though typically we load all and filter in UI or here)
   // For now, let's load all and calculate totals.
   // Period filtering logic can be added here or in the UI.
@@ -34,7 +35,9 @@ export function aggregateDashboardData(
   const providerMap = new Map<string, ProviderSummary>();
 
   // Helpers for aggregation
-  const initSession = (base: any): SessionSummary => ({
+  const initSession = (
+    base: Pick<SessionSummary, "id" | "slug" | "title" | "directory" | "createdAt" | "updatedAt" | "duration" | "parentID">
+  ): SessionSummary => ({
     ...base,
     totalCost: 0,
     billingCost: 0,

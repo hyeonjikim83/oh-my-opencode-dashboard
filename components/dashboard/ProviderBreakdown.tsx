@@ -46,7 +46,9 @@ export function ProviderBreakdown({ providers, codexUsage, period }: ProviderBre
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-100">Provider Usage</h2>
         <span className="text-[11px] text-slate-500">
-          ● Estimated : opencode sessions only
+          ● Estimated : Opencode sessions only
+          <br />
+          ● Codex : Msgs from Opencode + Live bar from OpenAI
         </span>
       </div>
 
@@ -152,6 +154,7 @@ export function ProviderBreakdown({ providers, codexUsage, period }: ProviderBre
                     provider={provider}
                     codexUsage={codexUsage!}
                     accent={meta.color}
+                    period={period}
                   />
                 )}
 
@@ -228,10 +231,12 @@ function CodexRealUsage({
   provider,
   codexUsage,
   accent,
+  period,
 }: {
   provider: ProviderSummary;
   codexUsage: CodexUsageSnapshot;
   accent: string;
+  period: Period;
 }) {
   const primary = codexUsage.primaryWindow;
   const secondary = codexUsage.secondaryWindow;
@@ -242,7 +247,7 @@ function CodexRealUsage({
     <>
       <div className="mt-2 flex items-baseline gap-2">
         <p className="font-mono text-xl font-bold text-slate-50">
-          {formatNumber(provider.totalMessages)}
+          {formatNumber(periodMessages(provider, period))}
           <span className="ml-1.5 text-[11px] font-normal text-slate-500">msgs</span>
         </p>
         <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">

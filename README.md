@@ -130,8 +130,11 @@ If Codex is not installed or the token is missing/expired, the dashboard falls b
 | --------------- | -------------------------- | ---------------------- |
 | OpenAI usage    | Estimated from local DB    | Live from OpenAI API   |
 | Rate limit bars | Daily/Weekly message count | 5h/1w rolling window % |
+| Message count   | Period-filtered (local DB) | Period-filtered (local DB) |
 | Plan info       | Not shown                  | Pro/Plus/Free badge    |
 | Reset timer     | Not shown                  | Countdown + timestamp  |
+
+> **Note:** The Codex live rate limit bars always show the current rolling-window snapshot from OpenAI (`/wham/usage`). This API does not provide period-based breakdowns, so the message count still comes from the local OpenCode DB and responds to the period toggle (Today / Week / Month / All). The header shows both indicators: **● Estimated** for local DB data and **● Codex** for live OpenAI data.
 
 ### Codex Environment Variables
 

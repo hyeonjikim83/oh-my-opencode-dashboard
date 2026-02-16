@@ -72,46 +72,45 @@ function Px({ g, c = 4 }: { g: (string | null)[][]; c?: number }) {
 
 function charGrid(name: string): (string | null)[][] {
   const [h, b, d, a] = PAL[name] ?? ["#94A3B8", "#64748B", "#475569", "#CBD5E1"];
-  const _ = null;
+  const empty = null;
   const w = "#FFFFFF";
   return [
-    [_, a, a, a, _],
+    [empty, a, a, a, empty],
     [a, h, h, h, a],
     [h, w, h, w, h],
-    [_, h, h, h, _],
+    [empty, h, h, h, empty],
     [d, b, b, b, d],
-    [_, b, b, b, _],
-    [_, d, _, d, _],
-    [_, d, _, d, _],
+    [empty, b, b, b, empty],
+    [empty, d, empty, d, empty],
+    [empty, d, empty, d, empty],
   ];
 }
 
 function spritePlant(): (string | null)[][] {
-  const _ = null;
+  const empty = null;
   const g = "#22C55E", k = "#15803D", p = "#713F12";
   return [
-    [_, _, g, _, _],
-    [_, g, k, g, _],
+    [empty, empty, g, empty, empty],
+    [empty, g, k, g, empty],
     [g, k, g, k, g],
-    [_, g, k, g, _],
-    [_, _, p, _, _],
-    [_, p, p, p, _],
+    [empty, g, k, g, empty],
+    [empty, empty, p, empty, empty],
+    [empty, p, p, p, empty],
   ];
 }
 
 function spriteDesk(): (string | null)[][] {
-  const _ = null;
+  const empty = null;
   const w = "#92400E", d = "#78350F";
   return [
     [w, w, w, w, w, w, w, w, w],
     [d, d, d, d, d, d, d, d, d],
-    [d, _, _, _, _, _, _, _, d],
-    [d, _, _, _, _, _, _, _, d],
+    [d, empty, empty, empty, empty, empty, empty, empty, d],
+    [d, empty, empty, empty, empty, empty, empty, empty, d],
   ];
 }
 
 function spriteShelf(): (string | null)[][] {
-  const _ = null;
   const f = "#78350F", r = "#EF4444", b = "#3B82F6", g = "#22C55E", y = "#EAB308";
   return [
     [f, f, f, f, f, f],
@@ -125,31 +124,31 @@ function spriteShelf(): (string | null)[][] {
 }
 
 function spriteComputer(): (string | null)[][] {
-  const _ = null;
+  const empty = null;
   const f = "#64748B", s = "#38BDF8", d = "#475569";
   return [
     [f, f, f, f, f],
     [f, s, s, s, f],
     [f, s, s, s, f],
     [f, f, f, f, f],
-    [_, _, d, _, _],
-    [_, d, d, d, _],
+    [empty, empty, d, empty, empty],
+    [empty, d, d, d, empty],
   ];
 }
 
 function spriteCouch(): (string | null)[][] {
-  const _ = null;
+  const empty = null;
   const c = "#7C3AED", d = "#5B21B6", a = "#A78BFA";
   return [
     [a, c, c, c, c, c, c, c, a],
     [a, c, c, c, c, c, c, c, a],
     [d, d, d, d, d, d, d, d, d],
-    [_, d, _, _, _, _, _, d, _],
+    [empty, d, empty, empty, empty, empty, empty, d, empty],
   ];
 }
 
 function spriteVending(): (string | null)[][] {
-  const _ = null;
+  const empty = null;
   const f = "#64748B", d = "#475569", r = "#EF4444", y = "#EAB308", b = "#3B82F6";
   return [
     [f, f, f, f, f],
@@ -157,14 +156,13 @@ function spriteVending(): (string | null)[][] {
     [f, r, y, b, f],
     [f, y, b, r, f],
     [f, d, d, d, f],
-    [f, _, f, _, f],
+    [f, empty, f, empty, f],
     [f, f, f, f, f],
-    [d, _, _, _, d],
+    [d, empty, empty, empty, d],
   ];
 }
 
 function spriteWhiteboard(): (string | null)[][] {
-  const _ = null;
   const f = "#94A3B8", w = "#E2E8F0", m = "#EF4444";
   return [
     [f, f, f, f, f, f, f],
@@ -177,12 +175,12 @@ function spriteWhiteboard(): (string | null)[][] {
 }
 
 function spriteTable(): (string | null)[][] {
-  const _ = null;
+  const empty = null;
   const w = "#92400E", d = "#78350F";
   return [
     [w, w, w, w, w, w, w, w, w, w],
     [d, d, d, d, d, d, d, d, d, d],
-    [d, _, _, _, _, _, _, _, _, d],
+    [d, empty, empty, empty, empty, empty, empty, empty, empty, d],
   ];
 }
 
